@@ -1,0 +1,35 @@
+package icp.a05;
+
+import java.util.Arrays;
+
+public class Word {
+	
+	private int [] count;
+	
+	public Word(int topicCount) {
+		this.count = new int [topicCount];
+		
+		init();
+	}
+	
+	private void init() {
+		for(int j = 0; j < count.length; j++)
+			count[j] = 0;
+	}
+	
+	public void increaseCount(int topicNumber) {
+		count[topicNumber]++;
+	}
+	
+	public void decreaseCount(int topicNumber) {
+		count[topicNumber]--;
+	}
+	
+	public int getCount(int topicNumber) {
+		return count[topicNumber];
+	}
+	
+	public String toString() {
+		return Arrays.toString(count);
+	}
+}

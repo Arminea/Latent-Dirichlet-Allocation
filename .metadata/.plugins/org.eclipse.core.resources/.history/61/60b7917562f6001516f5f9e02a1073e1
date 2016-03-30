@@ -1,0 +1,140 @@
+package icp.a05;
+
+import java.util.Arrays;
+
+/**
+ * Document.
+ * 
+ * @author Tereza Stanglova
+ *
+ */
+public class Document {
+	
+	/** List of words. */
+	String [] words; // words
+	
+	/** List of topics. */
+	int [] topics;
+	
+	/** Document size (length of the list 'words'). */
+	int currentDocumentSize;
+	
+	/** List of topics counts in documents. */
+	int [] topicCountsInDocument;
+	
+	/**
+	 * Constructor. Initializes data structures for document.
+	 * 
+	 * @param docLength		document size
+	 * @param topicCount	topic count
+	 */
+	public Document(int docLength, int topicCount) {
+		this.currentDocumentSize = docLength;
+		words = new String[docLength];
+		topics = new int[docLength];
+		topicCountsInDocument = new int[topicCount];
+		
+		init();
+	}
+	
+	/**
+	 * Fills list of topics counts with zeros.
+	 */
+	private void init() {
+		for(int i = 0; i < topicCountsInDocument.length; i++) {
+			topicCountsInDocument[i] = 0;
+		}
+	}
+	
+	/**
+	 * Adds a new word.
+	 * 
+	 * @param i				index
+	 * @param word			word
+	 * @param topicNumber	topic
+	 */
+	public void addNewWord(int i, String word, int topicNumber) {
+		words[i] = word;
+		topics[i] = topicNumber;
+		topicCountsInDocument[topicNumber]++;
+	}
+	
+	/**
+	 * Decreases a count of given topic.
+	 * 
+	 * @param topicNumber	topic
+	 */
+	public void decreaseTopicCountInDocument(int topicNumber) {
+		topicCountsInDocument[topicNumber]--;
+	}
+	
+	/**
+	 * Increases a count of given topic.
+	 * 
+	 * @param topicNumber	topic
+	 */
+	public void increaseTopicCountInDocument(int topicNumber) {
+		topicCountsInDocument[topicNumber]++;
+	}
+	
+	/**
+	 * Returns count of given topic.
+	 * 
+	 * @param topicNumber	topic
+	 * @return				count
+	 */
+	public int getTopicCountsInDocument(int topicNumber) {
+		return topicCountsInDocument[topicNumber];
+	}
+	
+	/**
+	 * Sets a new topic number for word.
+	 * 
+	 * @param wordIndex			index
+	 * @param newTopicNumber	new topic number
+	 */
+	public void setTopicNumber(int wordIndex, int newTopicNumber) {
+		topics[wordIndex] = newTopicNumber;
+	}
+	
+	/**
+	 * Returns a word.
+	 * 
+	 * @param wordIndex		index
+	 * @return				word
+	 */
+	public String getWord(int wordIndex) {
+		return words[wordIndex];
+	}
+	
+	/**
+	 * Return a topic.
+	 * 
+	 * @param wordIndex		index
+	 * @return				topic
+	 */
+	public int getWordTopic(int wordIndex) {
+		return topics[wordIndex];
+	}
+	
+	/**
+	 * Returns a size of document.
+	 * 
+	 * @return		size
+	 */
+	public int getDocumentSize() {
+		return currentDocumentSize;
+	}
+	
+	/**
+	 * Returns a string representation of this class.
+	 */
+	public String toString() {
+		String s = Arrays.toString(words);
+		s += "\n" + Arrays.toString(topics);
+		s += "\n" + Arrays.toString(topicCountsInDocument);
+		//s += "\nDocument size: " + currentDocumentSize;
+		return s;
+	}
+	
+}

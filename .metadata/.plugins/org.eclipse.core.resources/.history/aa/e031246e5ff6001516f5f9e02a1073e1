@@ -1,0 +1,26 @@
+package icp.tools;
+
+import java.io.IOException;
+
+/**
+ * Data provider.
+ * 
+ * @author NLP group, Faculty of Applied Sciences, University of West Bohemia
+ * 
+ */
+public interface DataProvider {
+
+	/**
+	 * Reads senteces until null.
+	 * @return
+	 * @throws IOException
+	 */
+	public String[] next() throws IOException;
+
+	/**
+	 * Close at the end.
+	 * @throws IOException
+	 */
+	public void close() throws IOException;
+
+}

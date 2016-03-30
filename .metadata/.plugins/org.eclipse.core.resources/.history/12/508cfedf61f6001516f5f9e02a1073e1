@@ -1,0 +1,108 @@
+package icp.a05;
+
+import java.util.Arrays;
+
+/**
+ * Document.
+ * 
+ * @author Tereza Stanglova
+ *
+ */
+public class Document {
+	
+	/** List of words. */
+	String [] words; // words
+	
+	/** List of topics. */
+	int [] topics;
+	
+	/** Document size (length of the list 'words'). */
+	int currentDocumentSize;
+	
+	/** List of topics counts in documents. */
+	int [] topicCountsInDocument;
+	
+	/**
+	 * Constructor. Initializes data structures for document.
+	 * 
+	 * @param docLength		document size
+	 * @param topicCount	topic count
+	 */
+	public Document(int docLength, int topicCount) {
+		this.currentDocumentSize = docLength;
+		words = new String[docLength];
+		topics = new int[docLength];
+		topicCountsInDocument = new int[topicCount];
+		
+		init();
+	}
+	
+	/**
+	 * Fills list of topics counts with zeros.
+	 */
+	private void init() {
+		for(int i = 0; i < topicCountsInDocument.length; i++) {
+			topicCountsInDocument[i] = 0;
+		}
+	}
+	
+	/**
+	 * Adds a new word.
+	 * 
+	 * @param i				index
+	 * @param word			word
+	 * @param topicNumber	topic
+	 */
+	public void addNewWord(int i, String word, int topicNumber) {
+		words[i] = word;
+		topics[i] = topicNumber;
+		topicCountsInDocument[topicNumber]++;
+	}
+	
+	/**
+	 * Decreases a count of given topic.
+	 * 
+	 * @param topicNumber	topic
+	 */
+	public void decreaseTopicCountInDocument(int topicNumber) {
+		topicCountsInDocument[topicNumber]--;
+	}
+	
+	/**
+	 * Increases a count of given topic.
+	 * 
+	 * @param topicNumber
+	 */
+	public void increaseTopicCountInDocument(int topicNumber) {
+		topicCountsInDocument[topicNumber]++;
+	}
+	
+	public int getTopicCountsInDocument(int topicNumber) {
+		return topicCountsInDocument[topicNumber];
+	}
+	
+	public void setTopicNumber(int wordIndex, int newTopicNumber) {
+		topics[wordIndex] = newTopicNumber;
+	}
+	
+	public String getWord(int wordIndex) {
+		return words[wordIndex];
+	}
+	
+	public int getWordTopic(int wordIndex) {
+		return topics[wordIndex];
+	}
+	
+	public int getDocumentSize() {
+		return currentDocumentSize;
+	}
+	
+	public String toString() {
+		String s = Arrays.toString(words);
+		s += "\n" + Arrays.toString(topics);
+		s += "\n" + Arrays.toString(topicCountsInDocument);
+		//s += "\nDocument size: " + currentDocumentSize;
+		return s;
+	}
+	
+}

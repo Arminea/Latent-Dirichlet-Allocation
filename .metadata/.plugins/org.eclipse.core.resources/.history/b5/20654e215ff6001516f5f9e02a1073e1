@@ -1,0 +1,28 @@
+package icp.a05;
+
+import icp.tools.Vocabulary;
+
+import java.util.List;
+
+public interface TopicModel {
+
+	/**
+	 * Returns a list of the most likely words for every topic.
+	 * @param maxWords length of arraylist
+	 * @return
+	 */
+	public List<String>[] getTopicWords(int maxWords);
+	
+	/**
+	 * Returns perplexity for train dataset.
+	 * @return
+	 */
+	public double getPerplexity();		
+			
+	/**
+	 * Return vocabulary
+	 * @return
+	 */
+	public Vocabulary getVocabulary();
+	
+}

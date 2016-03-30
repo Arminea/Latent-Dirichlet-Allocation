@@ -1,0 +1,292 @@
+package icp.a05;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.TreeMap;
+
+import icp.tools.Vocabulary;
+
+/**
+ * LDA model
+ * 
+ * @author Tereza Stanglova
+ *
+ */
+public class LDAModel implements TopicModel{
+
+	private static final double ALPHA 			= 0.5; // document prob param
+	private static final double BETA 			= 0.1; // word prob param
+	private static final int PERPLEXITY_PERIOD 	= 10;
+	
+	private ArrayList<Document> docs;
+	private Map<String, Word> wordTopicCounts;
+	private int [] topicCounts;
+	private Vocabulary vocabulary;
+	
+	private int numberOfIteration;
+	private int topicCount;
+	private double log2 = 1 / Math.log(2);
+	
+	public LDAModel(String fileName, int numberOfIteration, int topicCount) throws IOException {
+		this.numberOfIteration = numberOfIteration;
+		this.topicCount = topicCount;
+		LDADataset dataset = new LDADataset(fileName, topicCount);
+		dataset.readDataset(); // important
+		
+		docs = dataset.getDocs();
+		wordTopicCounts = dataset.getWordTopicCounts();
+		topicCounts = dataset.getTopicCounts();
+		vocabulary = dataset.getVocabulary();
+	}
+	
+	public void GibbsSampling() {
+		
+		for(int iteration = 0; iteration <= numberOfIteration; iteration++) {
+			
+			for(int i = 0; i < docs.size(); i++) { // iteration through documents
+				Document doc = docs.get(i);
+				for(int j = 0; j < doc.getDocumentSize(); j++) {
+					int newTopic = getNewTopic(doc, j);
+					doc.setTopicNumber(j, newTopic);
+				} // end for each word in document
+			} // end for each document
+			
+			if(iteration % PERPLEXITY_PERIOD == 0) {
+				System.out.println(iteration + ". iteration ------------------");
+				System.out.println("Perplexity: " + getPerplexity());
+				System.out.println();
+			}
+			
+		} // end of iterations
+		
+	}
+	
+	private int getNewTopic(Document doc, int wordIndex) {
+		int oldTopic = doc.getWordTopic(wordIndex);
+		String word = doc.getWord(wordIndex);
+		int newTopic = 0;
+		
+		wordTopicCounts.get(word).decreaseCount(oldTopic);
+		topicCounts[oldTopic]--;
+		doc.decreaseTopicCountInDocument(oldTopic);
+		
+		double [] scores = new double[topicCount];
+		double prob1, prob2;
+		double alphaSum = topicCount * ALPHA;
+		double betaSum = vocabulary.size() * BETA;
+		
+		for(int k = 0; k < topicCount; k++) {
+			prob1 = (wordTopicCounts.get(word).getCount(k) + BETA) / (topicCounts[k] + betaSum);
+			prob2 = (doc.getTopicCountsInDocument(k) + ALPHA) / (doc.getDocumentSize() + alphaSum);
+			
+			scores[k] = prob1 * prob2;
+		}
+		
+		newTopic = sample(scores);
+		
+		//System.out.println("old topic: " + oldTopic + "\t new topic: " + newTopic + "\t " + word);
+		
+		wordTopicCounts.get(word).increaseCount(newTopic);
+		topicCounts[newTopic]++;
+		doc.increaseTopicCountInDocument(newTopic);
+		
+		return newTopic;
+	}
+	
+	private int sample(double [] scores) {
+		double sum = 0;
+		for (double score : scores) // 
+			sum += score;
+		
+		double sampleScore = Math.random() * sum ;
+		
+		int newTopic = -1;
+		
+		while ( sampleScore > 0.0) {
+			newTopic++;
+			sampleScore -= scores[newTopic];
+		}
+		
+		return newTopic;
+	}
+	
+	private double getEntropy() {
+		double entropy = 0.0;
+		int count = 0;
+		/*System.out.println("******************************** ENTROPY start ***********************************");
+		printDebug();*/
+		Document doc;
+		double docProb, wordProb, prob = 0.0;
+		double alphaSum = topicCount * ALPHA;
+		double betaSum = vocabulary.size() * BETA;
+		
+		for(int i = 0; i < docs.size(); i++) {
+			doc = docs.get(i);
+			for(int j = 0; j < doc.getDocumentSize(); j++) {
+				String word = doc.getWord(j);
+				double tmp = 0.0;
+				for(int k = 0; k < topicCount; k++) {
+					wordProb = (wordTopicCounts.get(word).getCount(k) + BETA) / (topicCounts[k] + betaSum);
+					docProb = (doc.getTopicCountsInDocument(k) + ALPHA) / (doc.getDocumentSize() + alphaSum);
+					tmp += wordProb * docProb;
+				}
+				prob += Math.log( tmp ) * log2;
+				count++;
+			}
+		}
+		/*System.out.println("******************************** ENTROPY end ***********************************");
+		printDebug();*/
+		entropy = - (prob / (double) count);
+		
+		return entropy;
+	}
+	
+	// ************************** PRINT *******************************
+	
+	public void printDebug() {
+		
+		System.out.println("wordTopicCounts ----------------------------------------------");
+		System.out.println("wordTopicCounts size: " + wordTopicCounts.size());
+		for(Entry<String, Word> entry : wordTopicCounts.entrySet()) {
+			String key = entry.getKey();
+			Word value = entry.getValue();
+			if(key.length() > 7 ) {
+				System.out.println(key + "\t" + value.toString());
+			} else {
+				System.out.println(key + "\t\t" + value.toString());
+			}
+		}
+		
+		System.out.println("\ntopicCounts --------------------------------------------------");
+		System.out.println(Arrays.toString(topicCounts));
+		
+		System.out.println("\ndocs ---------------------------------------------------------");
+		System.out.println("Docs size: " + docs.size());
+		int count = 0;
+		for(Document d : docs) {
+			System.out.println(d.toString());
+			count += d.getDocumentSize();
+		}
+		System.out.println("docs word: " + count);
+	}
+	
+	// ************************** TEST ********************************
+	
+	public boolean getWordProbSum() {
+		double wordProbSum = 0.0;
+		double wordProb;
+		double betaSum = vocabulary.size() * BETA;
+		
+		for(int k = 0; k < topicCount; k++) {
+			
+			for(Entry<String, Word> entry : wordTopicCounts.entrySet()) {
+				//String key = entry.getKey();
+				Word value = entry.getValue();
+				wordProb = (value.getCount(k) + BETA) / (topicCounts[k] + betaSum);
+				wordProbSum += wordProb;
+			}
+
+			if (wordProbSum < 0.99d || wordProbSum > 1.01d) {
+				System.out.println("Nekde neco spatne " + wordProbSum);
+				return false;
+			}
+			wordProbSum = 0.0;
+		}
+		
+		return true;
+	}
+	
+	public boolean getDocProbSum() {
+		Document doc;
+		double docProb;
+		double docProbSum = 0.0;
+		double alphaSum = topicCount * ALPHA;
+		
+		for(int i = 0; i < docs.size(); i++) {
+			for(int k = 0; k < topicCount; k++) {
+			doc = docs.get(i);
+			docProb = (doc.getTopicCountsInDocument(k) + ALPHA) / (doc.getDocumentSize() + alphaSum);
+			docProbSum += docProb;
+			}
+			if (docProbSum < 0.99d || docProbSum > 1.01d) {
+				System.out.println("Nekde neco spatne. " + docProbSum);
+				return false;
+			}
+			docProbSum = 0.0;
+		}
+		return true;
+	}
+	
+	/**
+	 * Nice method to sort maps by value.
+	 * @param map
+	 * @return
+	 */
+	public static <K, V extends Comparable<V>> Map<K, V> sortByValues(final Map<K, V> map) {
+	    Comparator<K> valueComparator =  new Comparator<K>() {
+	        public int compare(K k1, K k2) {
+	            int compare = map.get(k2).compareTo(map.get(k1));
+	            if (compare == 0) return 1;
+	            else return compare;
+	        }
+	    };
+	    Map<K, V> sortedByValues = new TreeMap<K, V>(valueComparator);
+	    sortedByValues.putAll(map);
+	    return sortedByValues;
+	}
+	
+	//************************** OVERRIDE *************************
+	
+	@Override
+	public List<String>[] getTopicWords(int maxWords) {
+		
+		ArrayList[] arrayLists = new ArrayList[topicCount];
+		List<String>[] topWordsInTopic = arrayLists;
+		
+		for(int k = 0; k < topicCount; k++) {
+			Map<String, Integer> tmpMap = new HashMap<String, Integer>();
+			
+			for(Entry<String, Word> entry : wordTopicCounts.entrySet()) {
+				String key = entry.getKey();
+				Word value = entry.getValue();
+				
+				tmpMap.put(key, value.getCount(k));
+			}
+			
+			Map<String, Integer> tmpMapSorted = sortByValues(tmpMap);
+			ArrayList<String> topwords = new ArrayList<String>();
+			
+			int pom = 0;
+			for (Entry<String, Integer> entry : tmpMapSorted.entrySet()) {
+				if(pom == maxWords)
+					break;
+				
+				topwords.add(entry.getKey());
+			    pom++;
+			}
+			System.out.println(topwords.toString());
+			topWordsInTopic[k] = topwords;
+		}
+		
+		return topWordsInTopic;
+	}
+
+	@Override
+	public double getPerplexity() {
+		double entropy = getEntropy();
+		System.out.println("Entropy: " + entropy);
+		return Math.pow(2, entropy);
+	}
+
+	@Override
+	public Vocabulary getVocabulary() {
+		return vocabulary;
+	}
+
+}
