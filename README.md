@@ -24,7 +24,9 @@ Algorithm is iterative. Topic mixture for each document has a Dirichlet distribu
 
 		Reassign word <i>w</i> a new topic with probability P = P(topic t | document d) * P(word w | topic t)
 
-		![alt tag] (https://cloud.githubusercontent.com/assets/5311408/14233272/f4d2f26e-f9c3-11e5-98f7-26730f56efd8.gif)
+		<p align="center">
+		  <img src="https://cloud.githubusercontent.com/assets/5311408/14233272/f4d2f26e-f9c3-11e5-98f7-26730f56efd8.gif">
+		</p>
 
 	3. New topic number of current word must be increased in all counts.
 
